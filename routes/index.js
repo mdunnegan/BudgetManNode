@@ -7,15 +7,25 @@ router.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });
 
-// stormpath route only visible to logged-in users
+// stormpath route only visible to logged-in users. replaced by dashboard
 // router.get('/secret', stormpath.loginRequired, function(req, res) {
 //   res.send("If you're seeing this page, you must be logged in!");
 // });
 
-// custom jade route for /secret
-router.get('/secret', stormpath.loginRequired, function(req, res) {
-  res.render('secret', {
-    title: 'Top Secret HQ'
+// custom jade route for /budget
+router.get('/dashboard', stormpath.loginRequired, function(req, res) {
+
+  var db = req.db;
+  var collection = db.get('usercollection');
+  collection.find({},{},function(e,docs){
+  	req.user.customData['woot'] = 10.202223;
+  	req.user.save;
+
+	res.send({ 
+  	  title: req.user.customData['woot'], // holy shit this actually worked!
+      username: req.user.username,
+	  "userlist" : docs
+	});
   });
 });
 

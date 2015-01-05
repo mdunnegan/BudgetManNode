@@ -6,6 +6,11 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var stormpath = require('express-stormpath');
 
+// Mongo
+var mongo = require('mongodb');
+var monk = require('monk');
+var db = monk('localhost:27017/NodeBudgetMan');
+
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
@@ -13,10 +18,16 @@ var app = express();
 
 // stormpath setup: https://stormpath.com/blog/making-expressjs-authentication-fun-again/
 app.use(stormpath.init(app, {
+
   apiKeyId: '~/.stormpath.apiKey.properties',
   //apiKeySecret: 'xxx',
   application: 'https://api.stormpath.com/v1/applications/1MuAnxS8O7eDluYUzrsA6H',
-  secretKey: 'secret_key_is_difficult_to_guess_and_shouldnt_go_in_sourcecode'
+  secretKey: 'secret_key_is_difficult_to_guess_and_shouldnt_go_in_sourcecode',
+  redirectUrl: '/budget',
+  enableAutoLogin: true
+
+  // create a mongo instance here 
+
 }));
 
 // view engine setup
@@ -30,6 +41,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Make mongoDB accessible to our router
+app.use(function(req,res,next){
+    req.db = db;
+    next();
+});
 
 app.use('/', routes);
 app.use('/users', users);
