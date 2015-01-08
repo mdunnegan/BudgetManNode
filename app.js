@@ -8,6 +8,7 @@ var stormpath = require('express-stormpath');
 
 // Mongo
 var mongo = require('mongodb');
+var ObjectID = mongo.ObjectID;
 var monk = require('monk');
 var db = monk('localhost:27017/NodeBudgetMan');
 
@@ -16,18 +17,39 @@ var users = require('./routes/users');
 
 var app = express();
 
+var mongo_key_size = 24;
+
 // stormpath setup: https://stormpath.com/blog/making-expressjs-authentication-fun-again/
 app.use(stormpath.init(app, {
 
-  apiKeyId: '~/.stormpath.apiKey.properties',
-  //apiKeySecret: 'xxx',
-  application: 'https://api.stormpath.com/v1/applications/1MuAnxS8O7eDluYUzrsA6H',
-  secretKey: 'secret_key_is_difficult_to_guess_and_shouldnt_go_in_sourcecode',
-  redirectUrl: '/budget',
-  enableAutoLogin: true
+    postRegistrationHandler: function(account, res, next) {
 
-  // create a mongo instance here 
+    	// Upon registering, a user is given a random mongo id. Mongo will hold all the users budgets
+        var collection = db.get('usercollection');
+        var mongo_id = new ObjectID();
+        collection.insert( { _id: mongo_id, budget_elements: [] } );
+        account.customData["mongo_id"] = mongo_id;
 
+        account.customData.save(function(err) {
+            if (err) {
+                console.log('DID NOT SAVE USER');
+                next(err);
+            } else {
+                console.log('custom data saved!');
+            }
+        });
+    
+        console.log('User:\n', account, '\njust registered!');
+        next();
+    },
+
+    apiKeyId: '~/.stormpath.apiKey.properties',
+    // apiKeySecret: 'xxx',
+    application: 'https://api.stormpath.com/v1/applications/1MuAnxS8O7eDluYUzrsA6H',
+    secretKey: 'secret_key_is_difficult_to_guess_and_shouldnt_go_in_sourcecode',
+    redirectUrl: '/dashboard',
+    enableAutoLogin: true,
+    expandCustomData: true // lets me save custom data
 }));
 
 // view engine setup
@@ -81,6 +103,5 @@ app.use(function(err, req, res, next) {
         error: {}
     });
 });
-
 
 module.exports = app;
