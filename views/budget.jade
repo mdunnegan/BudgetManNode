@@ -1,0 +1,54 @@
+//extends layout
+
+doctype html
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js')
+        script(src='/javascripts/budget_elements.js')
+    body
+        block content
+
+            // Wrapper
+            #wrapper
+
+                // BUDGET ELEMENT LIST
+                #budgetElementList
+                    h2 Your Budget
+                    table
+                        thead
+                            th Name
+                            th Amount
+                            th Frequency
+                            th Update
+                            th Delete
+                        tbody
+                // /BUDGET ELEMENT LIST
+
+                // ADD BUDGET ELEMENT
+                #addBudgetElement
+                    h2#addUserHeader Add to your budget
+                    fieldset
+                        input#inputBudgetElementName(type='text', placeholder="Title")
+                        br
+                        input#inputAmount(type='text', placeholder='Amount')
+                        br
+
+                        input(type="radio", name="frequency", value="0", checked=frequency=="daily")
+                        | Daily
+                        input(type="radio", name="frequency", value="1", checked=frequency=="weekly")
+                        | Weekly
+                        input(type="radio", name="frequency", value="2", checked=frequency=="monthly")
+                        | Monthly
+                        input(type="radio", name="frequency", value="3", checked=frequency=="annually")
+                        | Anually
+                        br
+
+                        button(id='btnBudgetElementAction', data-action='add') Add To Budget
+                        button#btnCancelUpdate.hidden Cancel
+                // /ADD BUDGET ELEMENT
+
+            // /WRAPPER
+
+

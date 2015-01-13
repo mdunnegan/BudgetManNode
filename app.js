@@ -12,16 +12,15 @@ var ObjectID = mongo.ObjectID;
 var monk = require('monk');
 var db = monk('localhost:27017/NodeBudgetMan');
 
-var routes = require('./routes/index');
+var index = require('./routes/index');
 var users = require('./routes/users');
+var budget = require('./routes/budget');
+var budget_elements = require('./routes/budget_elements');
 
 var app = express();
 
-var mongo_key_size = 24;
-
 // stormpath setup: https://stormpath.com/blog/making-expressjs-authentication-fun-again/
 app.use(stormpath.init(app, {
-
     postRegistrationHandler: function(account, res, next) {
 
     	// Upon registering, a user is given a random mongo id. Mongo will hold all the users budgets
@@ -44,10 +43,10 @@ app.use(stormpath.init(app, {
     },
 
     apiKeyId: '~/.stormpath.apiKey.properties',
-    // apiKeySecret: 'xxx',
+    // apiKeySecret: 'xxx', // unneeded until I know what this does
     application: 'https://api.stormpath.com/v1/applications/1MuAnxS8O7eDluYUzrsA6H',
     secretKey: 'secret_key_is_difficult_to_guess_and_shouldnt_go_in_sourcecode',
-    redirectUrl: '/dashboard',
+    redirectUrl: '/budget',
     enableAutoLogin: true,
     expandCustomData: true // lets me save custom data
 }));
@@ -70,8 +69,14 @@ app.use(function(req,res,next){
     next();
 });
 
-app.use('/', routes);
+app.use('/', index);
 app.use('/users', users);
+
+// this route gets the view
+app.use('/budget', budget);
+
+// I'm unsure if this is bad practice or not. These routes handle REST methods
+app.use('/budget', budget_elements); 
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
