@@ -28,27 +28,27 @@ html
 
                 // ADD BUDGET ELEMENT
                 #addBudgetElement
-                    h2#addUserHeader Add to your budget
+                    h2#addBudgetElementHeader Add to your budget
                     fieldset
                         input#inputBudgetElementName(type='text', placeholder="Title")
                         br
                         input#inputAmount(type='text', placeholder='Amount')
                         br
-
-                        input(type="radio", name="frequency", value="0", checked=frequency=="daily")
+                        input(type="radio", name="frequency", value="Once")
+                        | Once
+                        input(type="radio", name="frequency", value="Daily")
                         | Daily
-                        input(type="radio", name="frequency", value="1", checked=frequency=="weekly")
+                        input(type="radio", name="frequency", value="Weekly")
                         | Weekly
-                        input(type="radio", name="frequency", value="2", checked=frequency=="monthly")
+                        input(type="radio", name="frequency", value="Monthly")
                         | Monthly
-                        input(type="radio", name="frequency", value="3", checked=frequency=="annually")
+                        input(type="radio", name="frequency", value="Annually")
                         | Anually
                         br
 
                         button(id='btnBudgetElementAction', data-action='add') Add To Budget
                         button#btnCancelUpdate.hidden Cancel
                 // /ADD BUDGET ELEMENT
-
             // /WRAPPER
 
 

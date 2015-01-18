@@ -1,3 +1,5 @@
+var positionOfBudgetToUpdate;
+
 $(document).ready(function() {
 
     // Populate the budget table on initial page load
@@ -7,7 +9,10 @@ $(document).ready(function() {
     // $('#budgetElementList table tbody').on('click', 'td a.linkshowbudgetelement', showBudgetElementInfo);
 
     // delete an element
-    $('#budgetElementList table tbody').on('click', 'td a.linkdeletelement', deleteBudgetElement);
+    $('#budgetElementList table tbody').on('click', 'td a.linkdeleteelement', function(e) {
+    	var index = $('#budgetElementList tr').index($(this).closest('tr')) - 1;
+    	deleteBudgetElement(e, index);
+    });
 
     // Populates the form with the selected element's data
     $('#budgetElementList table tbody').on('click', 'td a.linkupdateelement', populateFieldset);
@@ -44,8 +49,8 @@ function populateBudget() {
             tableContent += '<td>' + this.inputBudgetElementName + '</td>';
             tableContent += '<td>' + this.inputAmount + '</td>';
             tableContent += '<td>' + this.frequency + '</td>';
-            tableContent += '<td><a href="#" class="linkupdateelement" rel="' + this[i] + '">update</a></td>';
-            tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this[i] + '">delete</a></td>';
+            tableContent += '<td><a href="#" class="linkupdateelement" rel="' + i + '">update</a></td>';
+            tableContent += '<td><a href="#" class="linkdeleteelement" rel="' + i + '">delete</a></td>';
             tableContent += '</tr>';
             i++;
         });
@@ -77,45 +82,35 @@ function cancelUpdate(event){
     
 }
 
-// TODO - adapt to mongo
-// Michael Dunnegan
 // for use in PUT - populates the form when 'UPDATE' is selected
 function populateFieldset(event){
 
     event.preventDefault();
 
-    // Retrieve username from link rel attribute
-    var thisBudgetElementId = $(this).attr('rel');
+    var thisBudgetPosition = $(this).attr('rel');
 
-    // Get Index of object based on id value
-    var arrayPosition = budgetElementListData.map(function(arrayItem) { return arrayItem._id; }).indexOf(thisBudgetElementId);
+    $.getJSON( '/budget/elements', function( data ) {
 
-    // Get Budget Element Object
-    var thisBudgetElementObject = budgetElementListData[arrayPosition];
+    	// data comes in as an array of one element (one user), and we only need to iterate through budget elements
+        budgetElementListData = data[0].budget_elements;
 
-    // store this in a global >:(
-    positionOfUserToUpdate = arrayPosition;
+        //console.log("thisBudget: \n" + thisBudgetPosition);
+        //console.log("budgetElementListData: \n" + budgetElementListData);
 
-    // Everything above will certainly be different
+        var thisBudgetElementObject = budgetElementListData[thisBudgetPosition];
 
-    // Update info box header
-    $('#wrapper #addBudgetElement #addBudgetElementHeader').text("Update " + thisUserObject.username);
+        $('#btnBudgetElementAction').text('Update');
+	    $('#btnBudgetElementAction').attr('data-action', 'update');
+	    
+	    //Populate Info Box
+	    $('#addBudgetElement fieldset input#inputBudgetElementName').val(thisBudgetElementObject.inputBudgetElementName);
+	    $('#addBudgetElement fieldset input#inputAmount').val(thisBudgetElementObject.inputAmount);
 
-    // change btnBudgetElementAction to have data-action 'update', so it'll function differently
-    $('#btnBudgetElementAction').text('Update');
-    $('#btnBudgetElementAction').attr('data-action', 'update');
-    
-    //Populate Info Box
-    $('#addBudgetElement fieldset input#inputUserName').val(thisUserObject.username);
-    $('#addBudgetElement fieldset input#inputUserEmail').val(thisUserObject.email);
-    $('#addBudgetElement fieldset input#inputUserFullname').val(thisUserObject.fullname);
-    $('#addBudgetElement fieldset input#inputUserAge').val(thisUserObject.age);
-    $('#addBudgetElement fieldset input#inputUserLocation').val(thisUserObject.location);
-    $('#addBudgetElement fieldset input#inputUserGender').val(thisUserObject.gender);
+	    // populate radio buttons
+	    var frequency = thisBudgetElementObject.frequency;
+	    $(":radio[value="+frequency+"]").prop('checked', true);
 
-    // we're just going to unhide the hidden cancel button
-    document.getElementById("btnCancelUpdate").className = "";
-
+    });
 };
 
 // For later use...
@@ -164,7 +159,7 @@ function addBudgetElement(event) {
             'inputBudgetElementName': $('#addBudgetElement fieldset input#inputBudgetElementName').val(),
             'inputAmount': $('#addBudgetElement fieldset input#inputAmount').val(),
             'frequency': $('input[name="frequency"]:checked').val()
-        }
+        };
 
         // Use AJAX to post the object to our addBudgetElement service
         $.ajax({
@@ -196,11 +191,12 @@ function addBudgetElement(event) {
     }
 };
 
-// TODO - adapt to use mongo
 // Update an element
-function updateBudgetElement(event, id){
+function updateBudgetElement(event, position){
 
     event.preventDefault();
+
+    console.log(position);
 
     // Super basic validation - increase errorCount variable if any fields are blank
     var errorCount = 0;
@@ -211,33 +207,42 @@ function updateBudgetElement(event, id){
     // Check and make sure errorCount's still at zero
     if(errorCount === 0) {
 
-        userToUpdate = budgetElementListData[positionOfUserToUpdate];
+        //userToUpdate = budgetElementListData[position];
 
-        var updatedUser = {
-            'username': $('#addBudgetElement fieldset input#inputUserName').val(),
-            'email': $('#addBudgetElement fieldset input#inputUserEmail').val(),
-            'fullname': $('#addBudgetElement fieldset input#inputUserFullname').val(),
-            'age': $('#addBudgetElement fieldset input#inputUserAge').val(),
-            'location': $('#addBudgetElement fieldset input#inputUserLocation').val(),
-            'gender': $('#addBudgetElement fieldset input#inputUserGender').val()
+        var newElement = {
+            'inputBudgetElementName': $('#addBudgetElement fieldset input#inputBudgetElementName').val(),
+            'inputAmount': $('#addBudgetElement fieldset input#inputAmount').val(),
+            'frequency': $('input[name="frequency"]:checked').val()
         };
 
         // Use AJAX to post the object to our addBudgetElement service
         $.ajax({
             type: 'PUT',
-            data: updatedUser, 
-            url: '/users/updateelement/' + userToUpdate._id,
+            data: newElement, 
+            url: '/budget/updateelement/' + position,
             dataType: 'JSON'
         }).done(function(response) {
-
-            //console.log('done');
 
             // Check for successful (blank) response
             if (response.msg === '') {
 
                 // Clear the form inputs
-                $('#addBudgetElement fieldset input').val('');
+                $('#addBudgetElement fieldset input#inputBudgetElementName').val('');
+                $('#addBudgetElement fieldset input#inputAmount').val('');
 
+                //$('#addBudgetElement fieldset input#frequency').prop('checked', false);
+
+                //$('#addBudgetElement fieldset input:radio[name="frequency"]').prop('checked', false).checkboxradio("refresh");
+				// $("#addBudgetElement fieldset input:radio[name='frequency']").each(function(i) {
+				//     this.checked = false;
+				// });
+
+        		$("#addBudgetElement fieldset input:radio:checked").removeAttr("checked");
+
+        		//$('#addBudgetElement fieldset input#');
+
+                //$(this).prop('checked', false);
+                
                 // Update the table
                 populateBudget();
 
@@ -257,24 +262,22 @@ function updateBudgetElement(event, id){
     }
 }
 
-// TODO - adapt to use MoNgO
-// Delete Budget Element
-function deleteBudgetElement(event) {
+// Deletes Budget Element
+function deleteBudgetElement(event, position) {
 
     event.preventDefault();
     // Pop up a confirmation dialog
-    var confirmation = confirm('Are you sure you want to delete this user?');
+    var confirmation = confirm('Are you sure you want to delete this element?');
 
     // Check and make sure the user confirmed
     if (confirmation === true) {
         // If they did, do our delete
         $.ajax({
             type: 'DELETE',
-            url: '/users/deleteuser/' + $(this).attr('rel')
+            url: '/budget/deleteelement/' + position
         }).done(function( response ) {
             // Check for a successful (blank) response
-            if (response.msg === '') {
-            }
+            if (response.msg === '') {}
             else {
                 alert('Error: ' + response.msg);
             }
