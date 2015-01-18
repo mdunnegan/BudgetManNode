@@ -19,7 +19,6 @@ $(document).ready(function() {
     	populateFieldset.call(this, e);
     	positionOfBudgetToUpdate = $('#budgetElementList tr').index($(this).closest('tr')) - 1;
     }); 
-    	   
 
     // POST and PUT handles the switch between add and update
     $('#btnBudgetElementAction').on('click', function (e) {
@@ -98,11 +97,11 @@ function populateFieldset(event){
     	// data comes in as an array of one element (one user), and we only need to iterate through budget elements
         budgetElementListData = data[0].budget_elements;
 
-        //console.log("thisBudget: \n" + thisBudgetPosition);
-        //console.log("budgetElementListData: \n" + budgetElementListData);
-
         var thisBudgetElementObject = budgetElementListData[thisBudgetPosition];
 
+        console.log(thisBudgetElementObject);
+
+        $('#addBudgetElementHeader').text('Update ' + thisBudgetElementObject.inputBudgetElementName);
         $('#btnBudgetElementAction').text('Update');
 	    $('#btnBudgetElementAction').attr('data-action', 'update');
 	    
@@ -113,6 +112,9 @@ function populateFieldset(event){
 	    // populate radio buttons
 	    var frequency = thisBudgetElementObject.frequency;
 	    $(":radio[value="+frequency+"]").prop('checked', true);
+
+	    // make cancel button visible
+	    $('#btnCancelUpdate').removeClass('hidden');
 
     });
 };

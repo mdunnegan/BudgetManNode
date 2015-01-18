@@ -69,21 +69,13 @@ router.put('/updateelement/:id', stormpath.loginRequired, function(req, res){
 		    }
 		);
     });
-
-	// old stuff
-	// var db = req.db;
-    // var doc = { $set: req.body};
-    // var userToUpdate = req.params.id;
-    // db.collection('usercollection').updateById(userToUpdate, doc, function(err, result){
-    //     res.send(
-    //         (err === null) ? { msg: '' } : { msg: err }
-    //     );
-    // });
-
 });
 
 
 router.delete('/deleteelement/:id', stormpath.loginRequired, function(req, res) {
+
+	// id represents the element's position inside the array
+
 	var db = req.db;
 	var collection = db.get('usercollection');
 
@@ -110,7 +102,4 @@ router.delete('/deleteelement/:id', stormpath.loginRequired, function(req, res) 
     });
 });
 
-
-
 module.exports = router;
-
