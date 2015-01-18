@@ -6,6 +6,7 @@ var express = require('express');
 var router = express.Router();
 var stormpath = require('express-stormpath');
 
+
 router.get('/elements', stormpath.loginRequired, function(req, res, next) {
 	var db = req.db;
 	var user_id = req.user.customData["mongo_id"];
@@ -14,6 +15,7 @@ router.get('/elements', stormpath.loginRequired, function(req, res, next) {
         res.json(user_data);
     });
 });
+
 
 router.post('/newelement', stormpath.loginRequired, function(req, res){
 
@@ -33,6 +35,7 @@ router.post('/newelement', stormpath.loginRequired, function(req, res){
     );
 });
 
+
 router.put('/updateelement/:id', stormpath.loginRequired, function(req, res){
 
 	// in this method, :id will represent the position of the to-be-edited element in the users array of elements
@@ -42,20 +45,30 @@ router.put('/updateelement/:id', stormpath.loginRequired, function(req, res){
 	var user_id = req.user.customData["mongo_id"];
 	var budgetElementPosition = req.params.id;
 
-	console.log("inside router");
-	console.log(req.body);
+	collection.find({'_id' : user_id}, function (err, user_data) {
+        if (err){ throw err;}
 
+        // replace it with req.params.body
 
-	collection.update(
-		{'_id' : user_id},
-		{ $set: { "budget_elements.budgetElementPosition" : req.body} },
-		{upsert : true},
-		function(err, result){
-			res.send(
-	            (err === null) ? { msg: '' } : { msg: err }
-	        );
-	    }
-    );
+		var budget_elements = user_data[0].budget_elements;
+
+		budget_elements[budgetElementPosition] = req.body;
+
+		// console.log(budget_elements);
+		// console.log(req.body);
+
+		collection.update(
+			{ '_id': user_id }, 
+			{"$set" : 
+				{"budget_elements" : budget_elements}
+			},
+			function(err, result){
+				res.send(
+		            (err === null) ? { msg: '' } : { msg: err }
+		        );
+		    }
+		);
+    });
 
 	// old stuff
 	// var db = req.db;

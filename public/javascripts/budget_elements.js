@@ -15,7 +15,11 @@ $(document).ready(function() {
     });
 
     // Populates the form with the selected element's data
-    $('#budgetElementList table tbody').on('click', 'td a.linkupdateelement', populateFieldset);
+    $('#budgetElementList table tbody').on('click', 'td a.linkupdateelement', function(e) {
+    	populateFieldset.call(this, e);
+    	positionOfBudgetToUpdate = $('#budgetElementList tr').index($(this).closest('tr')) - 1;
+    }); 
+    	   
 
     // POST and PUT handles the switch between add and update
     $('#btnBudgetElementAction').on('click', function (e) {
@@ -78,7 +82,7 @@ function cancelUpdate(event){
     // clear fields
     $('#addBudgetElement fieldset input#inputBudgetElementName').val("");
     $('#addBudgetElement fieldset input#inputAmount').val("");
-    $('#addBudgetElement fieldset input#frequency').val(""); // TODO 
+    $("#addBudgetElement fieldset input:radio:checked").removeAttr("checked");
     
 }
 
@@ -145,7 +149,6 @@ function addBudgetElement(event) {
     console.log("addBudgetElement called");
     event.preventDefault();
 
-    // Super basic validation - increase errorCount variable if any fields are blank
     var errorCount = 0;
     $('#addBudgetElement input').each(function(index, val) {
         if($(this).val() === '') { errorCount++; }
@@ -173,7 +176,13 @@ function addBudgetElement(event) {
             if (response.msg == '') {
 
                 // Clear the form inputs
-                $('#addBudgetElement fieldset input').val('');
+                //$('#addBudgetElement fieldset input').val('');
+                $('#addBudgetElement fieldset input#inputBudgetElementName').val('');
+                $('#addBudgetElement fieldset input#inputAmount').val('');
+
+                // How did this possibly work on my first try. Awesome but infuriating
+                $("#addBudgetElement fieldset input:radio:checked").removeAttr("checked");
+
 
                 // Update the table
                 populateBudget();
@@ -185,18 +194,20 @@ function addBudgetElement(event) {
         });
     }
     else {
+
+    	alert("error count: " + errorCount)
         // If errorCount is more than 0, error out
-        alert('Please fill in all fields');
+        //alert('Please fill in all fields');
         return false;
     }
 };
 
 // Update an element
-function updateBudgetElement(event, position){
+function updateBudgetElement(event){
 
     event.preventDefault();
 
-    console.log(position);
+    //console.log(position);
 
     // Super basic validation - increase errorCount variable if any fields are blank
     var errorCount = 0;
@@ -219,30 +230,18 @@ function updateBudgetElement(event, position){
         $.ajax({
             type: 'PUT',
             data: newElement, 
-            url: '/budget/updateelement/' + position,
+            url: '/budget/updateelement/' + positionOfBudgetToUpdate,
             dataType: 'JSON'
         }).done(function(response) {
 
             // Check for successful (blank) response
             if (response.msg === '') {
 
-                // Clear the form inputs
                 $('#addBudgetElement fieldset input#inputBudgetElementName').val('');
                 $('#addBudgetElement fieldset input#inputAmount').val('');
 
-                //$('#addBudgetElement fieldset input#frequency').prop('checked', false);
-
-                //$('#addBudgetElement fieldset input:radio[name="frequency"]').prop('checked', false).checkboxradio("refresh");
-				// $("#addBudgetElement fieldset input:radio[name='frequency']").each(function(i) {
-				//     this.checked = false;
-				// });
-
-        		$("#addBudgetElement fieldset input:radio:checked").removeAttr("checked");
-
-        		//$('#addBudgetElement fieldset input#');
-
-                //$(this).prop('checked', false);
-                
+                // How did this possibly work on my first try. Awesome but infuriating
+                $("#addBudgetElement fieldset input:radio:checked").removeAttr("checked");
                 // Update the table
                 populateBudget();
 
@@ -284,6 +283,7 @@ function deleteBudgetElement(event, position) {
 
             // Update the table
             populateBudget();
+            cancelUpdate(); // this helps avoid inconsistencies with the indicies of the list
         });
     }
     else {
